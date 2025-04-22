@@ -2,7 +2,7 @@ import { ChangeEvent, useState, useContext } from "react";
 import { Container } from "../../../components/container";
 import { DashboardHeader } from "../../../components/panelHeader";
 
-import { FiUpload } from "react-icons/fi";
+import { FiUpload, FiTrash } from "react-icons/fi";
 import { useForm } from "react-hook-form";
 import { Input } from "../../../components/input";
 import { z } from "zod";
@@ -10,8 +10,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {AuthContext} from "../../../contexts/AlthContext"
 import { v4 as uuidv4} from "uuid"
 
-import { storage } from "../../../services/firebaseConnection"
+import { storage, db } from "../../../services/firebaseConnection"
 import {ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage"
+import { addDoc, collection } from "firebase/firestore"
 
 const schema = z.object({
   name: z.string().nonempty("O campo nome é obrigatório"),
@@ -31,13 +32,21 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+interface ImageItemProps{
+  uid: string;
+  name: string;
+  previewUrl: string;
+  url: string;
+}
+
 export function New() {
   const {user} = useContext(AuthContext);
-
   const {register, handleSubmit, formState: { errors }, reset,} = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: "onChange",
   });
+
+  const [carImages, setCarImages] = useState<ImageItemProps[]>([])
 
   async function handleFile(e: ChangeEvent<HTMLInputElement>){
     if(e.target.files && e.target.files[0]){
@@ -60,19 +69,77 @@ export function New() {
     const currentUid = user?.uid;
     const uidImage = uuidv4();
 
-    const uploadRef = ref(storage, `imageges/${currentUid}/${uidImage}`)
+    const uploadRef = ref(storage, `images/${currentUid}/${uidImage}`)
 
     uploadBytes(uploadRef, image)
     .then((snapshot) => {
         getDownloadURL(snapshot.ref).then((downloadUrl) => {
-          console.log("URL de acesso da foto", downloadUrl)
+          const imageItem ={
+            name: uidImage,
+            uid: currentUid,
+            previewUrl: URL.createObjectURL(image),
+            url: downloadUrl,
+          }
+
+          setCarImages((imagem) => [...imagem, imageItem] );
+
         })
     })
 
   }
 
   function onSubmit(data: FormData) {
-    console.log(data);
+
+    if(carImages.length === 0){
+      alert("Envie alguma imagem desse carro!")
+      return;
+    }
+
+    const carListImage = carImages.map(car => {
+      return{
+        uid: car.uid,
+        name: car.name,
+        url: car.uid
+      }
+    })
+
+    addDoc(collection(db, "cars"), {
+      name: data.name,
+      model: data.model,
+      whatsapp: data.whatsapp,
+      city: data.city,
+      year: data.year,
+      km: data.km,
+      price: data.price,
+      description: data.description,
+      created: new Date(),
+      awner: user?.name,
+      uid: user?.uid,
+      image: carListImage
+    })
+    .then(() => {
+      reset();
+      setCarImages([]);
+      console.log("Cadastrado com sucesso!!")
+    })
+    .catch((error) => {
+      console.log(error)
+      console.log("Erro ao cadastrar no banco!")
+    })
+  }
+
+  async function hendleDeleteImage(item: ImageItemProps){
+    const imagePath = `images/${item.uid}/${item.name}`
+
+    const imageFef = ref(storage, imagePath);
+
+    try{
+      await deleteObject(imageFef)
+      setCarImages(carImages.filter((car) => car.url !== item.url))
+    }catch(err){
+      console.log("Erro ao deletar")
+    }
+
   }
 
   return (
@@ -91,8 +158,22 @@ export function New() {
               accept="image/*"
               onChange={handleFile}
             />
+
           </div>
         </button>
+
+            {carImages.map(item =>(
+              <div key={item.name} className="w-full h-32 flex items-center justify-center relative">
+                <button className="absolute" onClick={() => hendleDeleteImage(item)}>
+                  <FiTrash size={28} color="#fff"/>
+                </button>
+                <img 
+                src={item.previewUrl} 
+                className="rounded-lg w-full h-32 object-cover"
+                alt="Foto do carro" 
+                />
+              </div>
+            ))}
       </div>
 
       <div className="w-full bg-white p-3 rounded-lg flex flex-col sm:flex-row items-center gap-2 mt-2">
