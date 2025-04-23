@@ -5,6 +5,9 @@ export function Dashboard() {
     return (
       <Container>
         <DashboardHeader/>
+        <div>
+          <h1>Teste</h1>
+        </div>
       </Container>
     )
   }

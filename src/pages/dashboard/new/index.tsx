@@ -1,13 +1,14 @@
 import { ChangeEvent, useState, useContext } from "react";
+
 import { Container } from "../../../components/container";
 import { DashboardHeader } from "../../../components/panelHeader";
+import { Input } from "../../../components/input";
+import {AuthContext} from "../../../contexts/AlthContext"
 
 import { FiUpload, FiTrash } from "react-icons/fi";
 import { useForm } from "react-hook-form";
-import { Input } from "../../../components/input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {AuthContext} from "../../../contexts/AlthContext"
 import { v4 as uuidv4} from "uuid"
 
 import { storage, db } from "../../../services/firebaseConnection"
@@ -99,7 +100,7 @@ export function New() {
       return{
         uid: car.uid,
         name: car.name,
-        url: car.uid
+        url: car.url
       }
     })
 
