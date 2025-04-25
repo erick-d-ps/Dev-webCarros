@@ -4,9 +4,16 @@ import { DashboardHeader } from "../../components/panelHeader";
 
 import { FiTrash2 } from "react-icons/fi";
 
-import { collection, getDocs, where, query, doc, deleteDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  where,
+  query,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
 import { db, storage } from "../../services/firebaseConnection";
-import { ref, deleteObject } from "firebase/storage"
+import { ref, deleteObject } from "firebase/storage";
 import { AuthContext } from "../../contexts/AlthContext";
 
 interface CarProps {
@@ -29,6 +36,7 @@ interface ImageCarProps {
 export function Dashboard() {
   const [cars, setCars] = useState<CarProps[]>([]);
   const { user } = useContext(AuthContext);
+  const [loadImg, setLoadeImg] = useState<string[]>([]);
 
   useEffect(() => {
     function loadCars() {
@@ -61,25 +69,27 @@ export function Dashboard() {
     loadCars();
   }, [user]);
 
-  async function handleDeleteCar(car: CarProps){
+  async function handleDeleteCar(car: CarProps) {
     const itemCar = car;
-    const docRef = doc(db, "cars", itemCar.id)
+    const docRef = doc(db, "cars", itemCar.id);
     await deleteDoc(docRef);
 
-    itemCar.images.map( async (image) =>{
-      const imagePhath = `images/${image.uid}/${image.name}`
+    itemCar.images.map(async (image) => {
+      const imagePhath = `images/${image.uid}/${image.name}`;
 
-      const imageRef = ref(storage, imagePhath)
+      const imageRef = ref(storage, imagePhath);
 
-      try{
-        await deleteObject(imageRef)
-        setCars(cars.filter(car => car.id !== itemCar.id))
-      }catch(err){
-        console.log(err, "ERRO AO DELETAR ESSA IMAGEM")
+      try {
+        await deleteObject(imageRef);
+        setCars(cars.filter((car) => car.id !== itemCar.id));
+      } catch (err) {
+        console.log(err, "ERRO AO DELETAR ESSA IMAGEM");
       }
+    });
+  }
 
-    })
-
+  function handleImageLoad(id: string) {
+    setLoadeImg((prevImagesLoaded) => [...prevImagesLoaded, id]);
   }
 
   return (
@@ -95,16 +105,27 @@ export function Dashboard() {
             >
               <FiTrash2 size={26} color="#000" />
             </button>
+
+            <div
+              className="w-full h-72 rounded-lg bg-slate-200"
+              style={{ display: loadImg.includes(car.id) ? "none" : "block" }}
+            ></div>
             <img
               className="w-full rounded-lg mb-2 max-h-70"
               src={car.images[0].url}
               alt="Carro"
+              onLoad={() => handleImageLoad(car.id)}
+              style={{ display: loadImg.includes(car.id) ? "block" : "none" }}
             />
             <p className="font-bold mt-1 px-2 mb-2">{car.name}</p>
 
             <div className="flex flex-col px-2">
-              <span className="text-zinc-700">Ano {car.year} | {car.km} km</span>
-              <strong className="text-black font-bold mt-4">R$ {car.price}</strong>
+              <span className="text-zinc-700">
+                Ano {car.year} | {car.km} km
+              </span>
+              <strong className="text-black font-bold mt-4">
+                R$ {car.price}
+              </strong>
             </div>
 
             <div className="w-full h-px bg-slate-200 my-2">
