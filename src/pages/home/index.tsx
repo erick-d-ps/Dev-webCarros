@@ -51,7 +51,7 @@ export function Home() {
       });
     }
     loadCars();
-  });
+  }, []);
 
   function handleImageLoad(id: string) {
     setLoadImages((prevImagesLoaded) => [...prevImagesLoaded, id]);
