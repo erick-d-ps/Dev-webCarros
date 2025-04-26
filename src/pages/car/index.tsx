@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { Container } from "../../components/container";
 import { FaWhatsapp } from "react-icons/fa";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import { getDoc, doc } from "firebase/firestore";
 import { db } from "../../services/firebaseConnection";
 
-import { Swiper, SwiperSlide } from "swiper/react"
-
-
+import { Swiper, SwiperSlide } from "swiper/react";
 
 interface CarProps {
   id: string;
@@ -35,7 +33,8 @@ interface ImageProps {
 export function CarDetail() {
   const { id } = useParams();
   const [car, setCar] = useState<CarProps>();
-  const [sliderPerView, setSliderPerView] = useState<number>(2)
+  const [sliderPerView, setSliderPerView] = useState<number>(2);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadCar() {
@@ -44,7 +43,13 @@ export function CarDetail() {
       }
 
       const docRef = doc(db, "cars", id);
-      getDoc(docRef).then((snapshot) => {
+      getDoc(docRef)
+       .then((snapshot) => {
+
+        if (!snapshot.data()) {
+          navigate("/")
+        }
+
         setCar({
           id: snapshot.id,
           name: snapshot.data()?.name,
@@ -67,41 +72,35 @@ export function CarDetail() {
   }, [id]);
 
   useEffect(() => {
-   
-    function handleResize(){
-      if(window.innerWidth < 720){
-        setSliderPerView(1)
-      }else{
-        setSliderPerView(2)
+    function handleResize() {
+      if (window.innerWidth < 720) {
+        setSliderPerView(1);
+      } else {
+        setSliderPerView(2);
       }
     }
-    
+
     handleResize();
 
-    window.addEventListener("resize", handleResize)
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener("resize", handleResize)
-    }
-
-  }, [])
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
     <Container>
-     
       <Swiper
         slidesPerView={sliderPerView}
-        pagination={{ clickable: true}}
+        pagination={{ clickable: true }}
         navigation
       >
-        {car?.image.map(image => (
+        {car?.image.map((image) => (
           <SwiperSlide key={image.name}>
-            <img 
-             src={image.url}
-             className="w-full h-96 object-cover"
-             />
+            <img src={image.url} className="w-full h-96 object-cover" />
           </SwiperSlide>
-        ) )}
+        ))}
       </Swiper>
 
       {car && (
@@ -134,16 +133,25 @@ export function CarDetail() {
           <strong>Descrição</strong>
           <p className="mb-4">{car?.description}</p>
 
-          <strong>Telefone / whatsApp</strong>
-          <p>{car.whatsapp}</p>
+          <div className="flex flex-col gap-4">
+            <div>
+              <strong>Propritario</strong>
+              <p>{car.awner}</p>
+            </div>
+            <div>
+              <strong>Telefone / whatsApp</strong>
+              <p>{car.whatsapp}</p>
+            </div>
+          </div>
 
-          <a href="#"
-           className="bg-green-500 w-full text-white flex items-center justify-center rounded-lg gap-2 my-6 h-10 text-xl font-medium cursor-pointer"
+          <a
+            href={`https://api.whatsapp.com/send?phone=${car?.whatsapp}&text=Olá vi esse ${car.name} no site WebCarros e fiquei interessado!`}
+            target="_blank"
+            className="bg-green-500 w-full text-white flex items-center justify-center rounded-lg gap-2 my-6 h-10 text-xl font-medium cursor-pointer"
           >
             Conversar com vendedor
-            <FaWhatsapp size={26} color="#fff"/>
+            <FaWhatsapp size={26} color="#fff" />
           </a>
-
         </main>
       )}
     </Container>
