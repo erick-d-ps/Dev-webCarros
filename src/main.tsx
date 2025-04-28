@@ -4,14 +4,20 @@ import "./index.css";
 import { router } from "./App.tsx";
 import { RouterProvider } from "react-router-dom";
 import AuthProvider from "./contexts/AlthContext.tsx";
-import { register } from "swiper/element/bundle"
+import { register } from "swiper/element/bundle";
 
-register()
-import 'swiper/swiper-bundle.css'
+register();
+import "swiper/swiper-bundle.css";
+
+import { Toaster } from "react-hot-toast";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
+      <Toaster 
+        position="top-right" 
+        reverseOrder={false} 
+      />
       <RouterProvider router={router} />
     </AuthProvider>
   </StrictMode>

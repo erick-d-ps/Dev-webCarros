@@ -3,6 +3,7 @@ import { Container } from "../../components/container";
 import { DashboardHeader } from "../../components/panelHeader";
 
 import { FiTrash2 } from "react-icons/fi";
+import toast from "react-hot-toast";
 
 import {
   collection,
@@ -82,8 +83,10 @@ export function Dashboard() {
       try {
         await deleteObject(imageRef);
         setCars(cars.filter((car) => car.id !== itemCar.id));
+        toast.success('Deletado com secesso!')
       } catch (err) {
         console.log(err, "ERRO AO DELETAR ESSA IMAGEM");
+        toast.error("Erro ao deletar!")
       }
     });
   }

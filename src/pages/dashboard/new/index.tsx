@@ -14,6 +14,7 @@ import { v4 as uuidv4} from "uuid"
 import { storage, db } from "../../../services/firebaseConnection"
 import {ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage"
 import { addDoc, collection } from "firebase/firestore"
+import toast from "react-hot-toast";
 
 const schema = z.object({
   name: z.string().nonempty("O campo nome é obrigatório"),
@@ -92,7 +93,7 @@ export function New() {
   function onSubmit(data: FormData) {
 
     if(carImages.length === 0){
-      alert("Envie alguma imagem desse carro!")
+      toast.error("Envie alguma imagen do carro")
       return;
     }
 
@@ -121,10 +122,12 @@ export function New() {
     .then(() => {
       reset();
       setCarImages([]);
+      toast.success('Carro cadastrado com sucesso!')
       console.log("Cadastrado com sucesso!!")
     })
     .catch((error) => {
       console.log(error)
+      toast.error("Erro ao cadastrar! Tente novamente..")
       console.log("Erro ao cadastrar no banco!")
     })
   }
